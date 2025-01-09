@@ -31,11 +31,12 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     """Decoder module."""
 
-    def __init__(self, output_size, hidden_size=200, n_layers=2, dropout=0.5, *args, **kwargs):
+    def __init__(self, output_size, hidden_size=200, n_layers=2, dropout=0.5, max_seq_length=MAX_LENGTH, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.embedding = nn.Embedding(output_size, hidden_size)
         self.lstm = nn.LSTM(hidden_size, hidden_size, num_layers=n_layers, dropout=dropout, batch_first=True)
         self.out = nn.Linear(hidden_size, output_size)
+        self._max_seq_length = max_seq_length
 
     def forward(self, enc_output, enc_hidden):
         batch_size = enc_output.size(0)
@@ -44,7 +45,7 @@ class Decoder(nn.Module):
         dec_hidden = enc_hidden
 
         dec_outputs = []
-        for i in range(MAX_LENGTH):
+        for i in range(self._max_seq_length):
             # forward pass for next token
             dec_output, dec_hidden = self.forward_step(dec_input, dec_hidden)
             dec_outputs.append(dec_output)

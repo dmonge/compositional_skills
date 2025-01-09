@@ -61,13 +61,22 @@ class CompositionalDataset(Dataset):
     def __init__(self, commands, actions):
         self.commands = commands
         self.actions = actions
+        self._max_length_actions = None
 
     def __len__(self):
         return len(self.commands)
 
     def __getitem__(self, idx):
-        return torch.IntTensor(self.commands[idx]), torch.IntTensor(self.actions[idx])
+        commands = torch.LongTensor(self.commands[idx])
+        # pad actions
+        actions = torch.ones(self.get_max_length_actions(), dtype=torch.long) * EOS_INDEX
+        actions[:len(self.actions[idx])] = torch.LongTensor(self.actions[idx])
+        return commands, actions
 
+    def get_max_length_actions(self):
+        if self._max_length_actions is None:
+         self._max_length_actions = max(map(len, self.actions))
+        return self._max_length_actions
 
 def pad_batch(batch: list):
     """Pads a batch of variable length sequences."""
