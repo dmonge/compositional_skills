@@ -4,86 +4,30 @@ Main script.
 import torch
 from icecream import ic
 
-from model import Encoder, Decoder, SOS, EOS, SOS_INDEX, EOS_INDEX
-
+from model import Encoder, Decoder
+from data import load_data, pad_batch
 
 # data
 #
-commands = []
-actions = []
-
-class Language:
-
-    def __init__(self):
-        self.index2word = [SOS, EOS]
-        self.word2index = {SOS: SOS_INDEX, EOS: EOS_INDEX}
-
-    def add_sentence(self, sentence):
-        for word in sentence:
-            self.add_word(word)
-
-    def add_word(self, word):
-        if word not in self.word2index:
-            index = len(self.index2word)
-            self.word2index[word] = index
-            self.index2word.append(word)
-
-    def encode(self, words):
-        return list(map(lambda w: self.word2index[w], words))
-
-    def decode(self, indices):
-        return list(map(lambda i: self.index2word[i], indices))
-
-    def __len__(self):
-        return len(self.index2word)
-
-
-commands_language = Language()
-actions_language = Language()
-with open('data/tasks.txt') as file:
-    for line in file.readlines():
-        in_part, out_part = line.split(" OUT: ")
-        in_sequence = in_part.replace("IN: ", "").strip().split()
-        out_sequence = out_part.strip().split()
-
-        commands_language.add_sentence(in_sequence)
-        actions_language.add_sentence(out_sequence)
-
-        commands.append(commands_language.encode(in_sequence + [EOS]))
-        actions.append(actions_language.encode([SOS] + out_sequence + [EOS]))
-
+dataset, commands_vocab, actions_vocab = load_data('data/tasks.txt')
+data_loader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True, collate_fn=pad_batch)
 
 # model
 #
-in_vocab_size = len(commands_language)
-out_vocab_size = len(actions_language)
+commands_vocab_size = len(commands_vocab)
+actions_vocab_size = len(actions_vocab)
 n_layers = 2
-ic(in_vocab_size)
-ic(out_vocab_size)
-
-encoder = Encoder(in_vocab_size, n_layers=n_layers)
-decoder = Decoder(out_vocab_size, n_layers=n_layers)
+encoder = Encoder(commands_vocab_size, n_layers=n_layers)
+decoder = Decoder(actions_vocab_size, n_layers=n_layers)
 ic(encoder)
 ic(decoder)
 ic('---')
 
-
-# forward pass
+# train
 #
-ic('data')
-x = torch.tensor(commands[-1]).unsqueeze(0)  # batch_size, seq_length
-y_true = torch.tensor(actions[-1]).unsqueeze(0)  # batch_size, seq_length
-ic(x, x.shape)
-ic(y_true, y_true.shape)
-
-ic('encoder')
-enc_out, enc_hidden = encoder(x)
-ic(enc_out.shape)
-ic(enc_hidden[-1].shape)
-ic(enc_hidden[0].shape)
-
-ic('decoder')
-y_pred, dec_hidden = decoder(enc_out, enc_hidden)
-ic(y_pred.shape)
-ic(dec_hidden[-1].shape)
-ic(dec_hidden[0].shape)
+n_epochs = 1
+for epoch in range(n_epochs):
+    ic(epoch)
+    for i, (x_seq, y_seq) in enumerate(data_loader):
+        ic(i, x_seq.shape, y_seq.shape)
+        # TODO

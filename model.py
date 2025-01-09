@@ -4,13 +4,12 @@ Model definition.
 import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from icecream import ic
 
 
 EOS = '<EOS>'
 SOS = '<SOS>'
-SOS_INDEX = 0
-EOS_INDEX = 1
+SOS_INDEX = 1
+EOS_INDEX = 0
 MAX_LENGTH = 20
 
 
