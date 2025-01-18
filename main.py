@@ -85,6 +85,9 @@ for epoch in range(n_epochs):
 
 plt.plot(train_losses, label='train')
 plt.plot(val_losses, label='val')
+plt.legend()
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
 plt.show()
 
 # evaluation
